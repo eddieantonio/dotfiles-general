@@ -22,7 +22,9 @@ alias grep='grep --color'
 alias tarz='tar -xzvf'
 alias svi="sudo vim"
 alias mkdir='mkdir -p'
-alias isodate='date +%Y-%m-%d'
+alias isodate='date +%F'
+alias isodatetime='date +%FT%H:%M:%S%z'
+alias isodatetimeutc='date -u +%FT%H:%M:%SZ'
 alias unixtime='date +%s'
 
 # My git aliases
@@ -33,6 +35,8 @@ alias gd='git diff'
 alias gl='git pull'
 alias gp='git push'
 alias gss='git status --short'
+alias gco='git checkout'
+alias gb='git branch'
 
 # Python doctest
 alias doctest='python -m doctest'
@@ -43,30 +47,30 @@ alias ipy=ipython
 
 # Jekyll post generation
 function post-jekyll {
-   if [ -z "$1" ]; then
-     echo "Usage: provide a title argument."
-     exit -1
-   else
-     title="$@"
-   fi
+    if [ -z "$1" ]; then
+        echo "Usage: provide a title argument."
+        exit -1
+    else
+        title="$@"
+    fi
 
-   d=$(date +"%Y-%m-%d")
-   D="$d $(date +"%H:%M:%S")"
+    d=$(date +"%Y-%m-%d")
+    D="$d $(date +"%H:%M:%S")"
 
-   slug=$(echo $title | tr '[:upper:]' '[:lower:]' | tr '[:space:]' '-')
-   slug="${slug:0:${#slug}-1}"
-   post="./_posts/$d-$slug.md"
+    slug=$(echo $title | tr '[:upper:]' '[:lower:]' | tr '[:space:]' '-')
+    slug="${slug:0:${#slug}-1}"
+    post="./_posts/$d-$slug.md"
 
-   body=""
-   read -d '' body <<EOF
----
-title:  $title
----
+    body=""
+    read -d '' body <<EOF
+    ---
+    title:  $title
+    ---
 
 EOF
 
-   echo "$body" > $post
-   $EDITOR $post
+    echo "$body" > $post
+    $EDITOR $post
 }
 
 # Webdev stuff.
@@ -80,7 +84,7 @@ alias rot13="tr '[A-Za-z]' '[N-ZA-Mn-za-m]'"
 
 # Starts the named virtual machine.
 function vm-start {
-   VBoxManage startvm $1 --type headless
+    VBoxManage startvm $1 --type headless
 }
 
 # Virtual Machine aliases
@@ -102,7 +106,7 @@ alias mime='file -b --mime-type'
 # Use Pygements to colour source code in less.
 alias pcat='pygmentize -g'
 function pless () {
-   pcat $1 | less
+    pcat $1 | less
 }
 
 # Add a tac commond on systems that lack it.
@@ -151,27 +155,30 @@ alias gcamend='env GIT_EDITOR=true git commit --amend'
 
 # Circumvent the above restriction
 gpip(){
-   PIP_REQUIRE_VIRTUALENV="" pip $@
+    PIP_REQUIRE_VIRTUALENV="" pip $@
 }
 gpip3(){
-   PIP_REQUIRE_VIRTUALENV="" pip3 $@
+    PIP_REQUIRE_VIRTUALENV="" pip3 $@
 }
 
-# Print from the grad student printers!
+# Print using the grad student printers!
 function gradprint() {
+    # Ensure there's a filename.
     if [ -z "$1" ] ; then
-        echo "Must provide a filename." 1>&2
+        echo "gradprint: file to print required" 1>&2
         return 1
     fi
 
-    if ! stat -qf '' $1 ; then
-        echo "File \`\`$1'' does not exist!" 1>&2
+    # Ensure the file exists.
+    if [ ! -f "$1" ] ; then
+        echo "gradprint: file \`\`$1'' does not exist or is not a regular file" 1>&2
         return 2
     fi
 
-    FILENAME=/tmp/$(basename $1)
+    FILENAME=/tmp/$(basename "$1")
     REMOTE=login
-    scp $1 $REMOTE:$FILENAME && ssh -Y $REMOTE xdg-open $FILENAME
+    # Copy the file over and open the file to print.
+    rsync "$1" "$REMOTE:$FILENAME" && ssh -fY "$REMOTE" xdg-open "$FILENAME"
 }
 
 # ANTLR4 stuff
@@ -183,10 +190,37 @@ alias grun='java org.antlr.v4.runtime.misc.TestRig'
 # manswitch curl -x
 # From: https://www.commandlinefu.com/commands/view/9065/what-is-the-use-of-this-switch-
 function manswitch () {
-   man $1 | less -p "^ +$2"
+    man $1 | less -p "^ +$2"
 }
 
 # https://www.gitignore.io/
 function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
 # This is a good way too:
 # git config --global alias.ignore '!gi() { curl -L -s https://www.gitignore.io/api/$@ ;}; gi'
+
+# If somebody decides to alias sl, undo it!
+if alias sl &> /dev/null; then
+    unalias sl
+fi
+
+# Rstudio on macOS
+if [ -d /Applications/RStudio.app ]; then
+    alias rstudio='open -aRStudio'
+fi
+
+saybugs() {
+    man $1|col -b|sed -n '/^BUGS/,/^[A-Z]/p' |tail -n+2 |{ say --voice=Bad||espeak; };
+}
+
+voices() {
+    say --voice '?' | cut -d ' ' -f 1 | xargs -I {} say --voice {} 'Hello, my name is {}.'
+}
+
+pman() {
+    man -t ${@} | open -f -a /Applications/Preview.app/
+}
+
+forget() {
+    test $# -lt 1 && return 1
+    mv $@ /tmp/
+}
