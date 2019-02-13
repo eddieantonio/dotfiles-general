@@ -49,7 +49,7 @@ alias ipy=ipython
 function post-jekyll {
     if [ -z "$1" ]; then
         echo "Usage: provide a title argument."
-        exit -1
+        return -1
     else
         title="$@"
     fi
@@ -74,7 +74,7 @@ EOF
 }
 
 # Webdev stuff.
-alias jeks='jekyll serve --baseurl "" --watch'
+alias jeks='jekyll serve --watch'
 
 # Erlang rebar stuff
 alias erlb='erl -pz ebin deps/*/ebin'
@@ -221,6 +221,9 @@ pman() {
 }
 
 forget() {
-    test $# -lt 1 && return 1
-    mv $@ /tmp/
+    if [ $# -lt 1 ] ;then
+        open /tmp/
+    else
+        mv -f $@ /tmp/
+    fi
 }
