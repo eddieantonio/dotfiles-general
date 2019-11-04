@@ -8,10 +8,7 @@ different systems.
 License
 -------
 
-    2017 Eddie Antonio Santos
-
-    Copyright (C) 2017 Eddie Antonio Santos
-
+    Copyright (C) 2017–2019 Eddie Antonio Santos
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
