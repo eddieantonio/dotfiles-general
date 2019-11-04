@@ -1,9 +1,6 @@
 # vim: set ft=zsh:
 
-# Aliases (common to bash and zsh)
-
-# TODO: ensure these are, in fact, common to both ZSH and BASH
-# TODO: ensure compatibility across BSD and GNU tools, when it matters.
+# Aliases
 
 # "Safe" commands
 alias mv="mv -i"
@@ -27,6 +24,23 @@ alias isodatetime='date +%FT%H:%M:%S%z'
 alias isodatetimeutc='date -u +%FT%H:%M:%SZ'
 alias unixtime='date +%s'
 
+# forget(1)
+#
+# Forget a file (dump in temp directory that gets deleted on reboot).
+#
+# Makes me feel safer than doing an rm, because I can still technically
+# recover forgotten files (up to a point).
+forget() {
+    if [ $# -lt 1 ] ;then
+        open /tmp/
+    else
+        mv -f $@ /tmp/
+    fi
+}
+
+
+################################# Git stuff #################################
+
 # My git aliases
 alias ga='git add'
 alias gc='git commit'
@@ -35,15 +49,53 @@ alias gd='git diff'
 alias gl='git pull'
 alias gp='git push'
 alias gss='git status --short'
-alias gco='git checkout'
+alias gsw="git switch"
+alias grt="git restore"
+# My muscle memory stretches for this alias for git-checkout,
+# but git-revert and git-switch are almost always better options:
+function gco() {
+    echo 'Use `gsw` or `grt` instead!'
+    return 2
+}
 alias gb='git branch'
+# gupdate(1)
+#
+# gupdate -- switch to the primary branch with the latest updates
+# Use case: when I'm on a merged branch, and I want to switch back to the
+# default branch
+function gupdate() {
+    DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')"
+    git switch $DEFAULT_BRANCH && git pull && hub sync
+}
+
+# Unconditionally git commit --ammend
+alias gcamend='env GIT_EDITOR=true git commit --amend'
+
+# https://www.gitignore.io/
+function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
+# This is a good way too:
+# git config --global alias.ignore '!gi() { curl -L -s https://www.gitignore.io/api/$@ ;}; gi'
+
+# This will never run out of its novelty.
+alias such=git
+alias very=git
+alias much=git
+alias wow='git status -s'
+
+
+################################ Python stuff ################################
 
 # Python doctest
-alias doctest='python -m doctest'
-alias doctest3='python3 -m doctest'
+alias doctest2='python -m doctest'
+alias doctest='python3 -m doctest'
 
-# Gets me in the habit of using a better Python...
-alias ipy=ipython
+# Install a Python module globally
+gpip() {
+    PIP_REQUIRE_VIRTUALENV="" pip3 --user $@
+}
+
+
+########################### Jekyll and blog stuff ###########################
 
 # Jekyll post generation
 function post-jekyll {
@@ -76,41 +128,27 @@ EOF
 # Webdev stuff.
 alias jeks='jekyll serve --watch'
 
-# Erlang rebar stuff
-alias erlb='erl -pz ebin deps/*/ebin'
+################################ macOS stuff ################################
 
-# For no real reason:
-alias rot13="tr '[A-Za-z]' '[N-ZA-Mn-za-m]'"
+# Rstudio on macOS
+if [ -d /Applications/RStudio.app ]; then
+    alias rstudio='open -aRStudio'
+fi
 
-# Starts the named virtual machine.
-function vm-start {
-    VBoxManage startvm $1 --type headless
+saybugs() {
+    man $1|col -b|sed -n '/^BUGS/,/^[A-Z]/p' |tail -n+2 |{ say --voice=Bad||espeak; };
 }
 
-# Virtual Machine aliases
-alias start-lmde='vm-start LMDE'
-alias pause-lmde='VBoxManage controlvm LMDE savestate'
-
-# This will never run out of its novelty.
-alias such=git
-alias very=git
-alias much=git
-alias wow='git status -s'
-
-# :?
-alias yass='yes yass'
-
-# Get content-type of file.
-alias mime='file -b --mime-type'
-
-# Use Pygements to colour source code in less.
-alias pcat='pygmentize -g'
-function pless () {
-    pcat $1 | less
+voices() {
+    say --voice '?' | cut -d ' ' -f 1 | xargs -I {} say --voice {} 'Hello, my name is {}.'
 }
 
-# Add a tac commond on systems that lack it.
-hash tac 2> /dev/null || alias tac='tail -r'
+pman() {
+    man -t ${@} | open -f -a /Applications/Preview.app/
+}
+
+# Show/hide folders in Finder.
+alias hide='chflags hidden'
 
 # https://github.com/emilisto/itmux/blob/master/itmux.sh
 function itmux-ssh() {
@@ -135,55 +173,29 @@ function itmux-ssh() {
     fi
 }
 
-# Loads psysh(1) using the composer autoloader (assumes vendor/ is in base of
-# git repository).
-alias apsysh='psysh "$(git rev-parse --show-toplevel)"/vendor/autoload.php'
 
-# Webdev stuff.
-alias behat='$(git rev-parse --show-toplevel)/vendor/bin/behat' # --no-paths'
-alias jasmine='$(npm bin)/jasmine'
+############################### Uncategorized ###############################
 
-alias metamap-start='/usr/local/public_mm/bin/skrmedpostctl start && /usr/local/public_mm/bin/wsdserverctl start'
-alias metamap-stop='/usr/local/public_mm/bin/skrmedpostctl stop && /usr/local/public_mm/bin/wsdserverctl stop'
+# Erlang rebar stuff
+alias erlb='erl -pz ebin deps/*/ebin'
 
-# Show/hide folders in Finder.
-alias hide='chflags hidden'
+# For no real reason:
+alias rot13="tr '[A-Za-z]' '[N-ZA-Mn-za-m]'"
 
-# Unconditionally git commit --ammend
-alias gcamend='env GIT_EDITOR=true git commit --amend'
+# :?
+alias yass='yes yass'
 
+# Get content-type of file.
+alias mime='file -b --mime-type'
 
-# Circumvent the above restriction
-gpip(){
-    PIP_REQUIRE_VIRTUALENV="" pip $@
-}
-gpip3(){
-    PIP_REQUIRE_VIRTUALENV="" pip3 $@
+# Use Pygements to colour source code in less.
+alias pcat='pygmentize -g'
+function pless () {
+    pcat $1 | less
 }
 
-# Print using the grad student printers!
-function gradprint() {
-    # Ensure there's a filename.
-    if [ -z "$1" ] ; then
-        echo "gradprint: file to print required" 1>&2
-        return 1
-    fi
-
-    # Ensure the file exists.
-    if [ ! -f "$1" ] ; then
-        echo "gradprint: file \`\`$1'' does not exist or is not a regular file" 1>&2
-        return 2
-    fi
-
-    FILENAME=/tmp/$(basename "$1")
-    REMOTE=login
-    # Copy the file over and open the file to print.
-    rsync "$1" "$REMOTE:$FILENAME" && ssh -fY "$REMOTE" xdg-open "$FILENAME"
-}
-
-# ANTLR4 stuff
-alias antlr4='java -Xmx500M -cp "/usr/local/lib/antlr-4.5-complete.jar:$CLASSPATH" org.antlr.v4.Tool'
-alias grun='java org.antlr.v4.runtime.misc.TestRig'
+# Add a tac commond on systems that lack it.
+hash tac 2> /dev/null || alias tac='tail -r'
 
 # manswitch <cmd> <flag>
 # e.g.,
@@ -193,37 +205,7 @@ function manswitch () {
     man $1 | less -p "^ +$2"
 }
 
-# https://www.gitignore.io/
-function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
-# This is a good way too:
-# git config --global alias.ignore '!gi() { curl -L -s https://www.gitignore.io/api/$@ ;}; gi'
-
 # If somebody decides to alias sl, undo it!
 if alias sl &> /dev/null; then
     unalias sl
 fi
-
-# Rstudio on macOS
-if [ -d /Applications/RStudio.app ]; then
-    alias rstudio='open -aRStudio'
-fi
-
-saybugs() {
-    man $1|col -b|sed -n '/^BUGS/,/^[A-Z]/p' |tail -n+2 |{ say --voice=Bad||espeak; };
-}
-
-voices() {
-    say --voice '?' | cut -d ' ' -f 1 | xargs -I {} say --voice {} 'Hello, my name is {}.'
-}
-
-pman() {
-    man -t ${@} | open -f -a /Applications/Preview.app/
-}
-
-forget() {
-    if [ $# -lt 1 ] ;then
-        open /tmp/
-    else
-        mv -f $@ /tmp/
-    fi
-}
