@@ -87,14 +87,8 @@ alias wow='git status -s'
 ################################ Python stuff ################################
 
 # Python doctest
-alias doctest2='python -m doctest'
+alias doctest2='python2.7 -m doctest'
 alias doctest='python3 -m doctest'
-
-# Install a Python module globally
-gpip() {
-    PIP_REQUIRE_VIRTUALENV="" pip3 --user $@
-}
-
 
 ########################### Jekyll and blog stuff ###########################
 
