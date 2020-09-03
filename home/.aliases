@@ -64,8 +64,15 @@ alias gb='git branch'
 # Use case: when I'm on a merged branch, and I want to switch back to the
 # default branch
 function gupdate() {
-    DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')"
-    git switch $DEFAULT_BRANCH && git pull && hub sync
+    if git symbolic-ref refs/remotes/origin/HEAD 1>/dev/null 2>&1; then
+        DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')"
+        git switch $DEFAULT_BRANCH && git pull && hub sync
+    else
+        # Protip from: https://stackoverflow.com/a/60013142/6626414
+        echo "$(tput setaf 1)Cannot determine origin's default" 'branch!'"$(tput sgr0)"
+        echo "  run" '`'"$(tput bold)git remote set-head origin --auto$(tput sgr0)"'`' "to reset the default branch"
+        return 128
+    fi
 }
 # Useful for merge conflicts/rebases, etc.
 alias gcne='git commit --no-edit'
