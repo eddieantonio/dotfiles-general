@@ -211,3 +211,21 @@ function manswitch () {
 if alias sl &> /dev/null; then
     unalias sl
 fi
+
+# flatten-pdf-annotations
+#
+# e.g., Preview puts annotations on a separate PDF layer. Some PDF viewers
+# cannot deal with multiple layers, so you can convert to Postscript, and then
+# convert back to PDF to get rid of the layers.
+#
+# Requires ghostscript
+# 
+# From https://superuser.com/a/489200/711047
+function flatten-pdf-annotations () {
+    BASENAME="$(basename -s .pdf "$1")"
+    pdf2ps -q -sOutputFile=- "$1" | ps2pdf - "$BASENAME-flattened.pdf"
+}
+
+function portpid() {
+    lsof -t -i tcp:$1
+}
